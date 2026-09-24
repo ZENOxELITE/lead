@@ -2,7 +2,7 @@
 
 Upload a leads spreadsheet → the app cleans it (dedupes, flags missing/invalid
 numbers) → you pick which leads to pitch → it writes a short, non-generic
-WhatsApp pitch per lead with **Gemma 4 31B IT** → you read/edit each pitch →
+WhatsApp pitch per lead with **Kimi K3 from NVIDIA** → you read/edit each pitch →
 click through to WhatsApp and send it yourself.
 
 Nothing is ever sent automatically — every pitch opens as a pre-filled
@@ -18,7 +18,7 @@ sending).
 3. **Clean** — it flags rows with a missing number, an invalid number, or a
    duplicate (same number seen twice). You can fix a row inline and
    re-check it, or download the flagged rows to fix separately.
-4. **Generate pitches** — for the leads you select, it calls Gemma 4 31B IT
+4. **Generate pitches** — for the leads you select, it calls Kimi K3 from NVIDIA
    with a strict style guide (no "Dear Sir/Madam," no filler, one concrete
    detail about the business, 2–4 sentences, signed as Orvexa Systems) so
    pitches don't read like generic AI outreach.
@@ -35,9 +35,8 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Get an API key from [openrouter.ai](https://openrouter.ai) (pay-as-you-go,
-no subscription — Gemma 4 31B IT costs roughly $0.10–0.13 per 1M input
-tokens, a few cents for a whole batch of pitches). Then either:
+Get an NVIDIA API key from the [NVIDIA API Catalog](https://build.nvidia.com/)
+and then either:
 
 - Copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and
   paste your key in, **or**
@@ -77,7 +76,7 @@ work.
    - Before (or after) deploying, open **Settings → Secrets** on the app
      and paste in:
      ```toml
-     OPENROUTER_API_KEY = "sk-or-v1-..."
+    NVIDIA_API_KEY = "nvapi-..."
      ```
    - Deploy. The app picks the key up from secrets automatically, so you
      won't need to paste it into the sidebar each time.
@@ -92,7 +91,6 @@ work.
 - The style guide and agency info sent to the model are editable in the
   sidebar, so you can retune the pitch voice any time without touching
   code.
-- If you'd rather use a different model/provider (Google AI Studio,
-  Together, etc.), change `MODEL_ID` and `OPENROUTER_URL` near the top of
-  `app.py` — the rest of the app doesn't care which OpenAI-compatible
-  endpoint it's talking to.
+- The app uses NVIDIA's OpenAI-compatible chat completions endpoint with
+  `moonshotai/kimi-k3`. Keep your NVIDIA API key in Streamlit Secrets or the
+  temporary sidebar field; never commit the real key.

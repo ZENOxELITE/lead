@@ -2,7 +2,7 @@
 Orvexa Lead Pitcher
 --------------------
 Upload a leads spreadsheet -> clean it (dedupe, missing/invalid numbers) ->
-generate a short, non-generic WhatsApp pitch per lead with Gemma 4 31B IT ->
+generate a short, non-generic WhatsApp pitch per lead with Kimi K3 ->
 review/edit each pitch -> open it in WhatsApp and send it yourself.
 
 No message is ever sent automatically. Every pitch is generated as a
@@ -34,8 +34,8 @@ except ImportError:
 
 st.set_page_config(page_title="Orvexa Lead Pitcher", layout="wide")
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL_ID = "google/gemma-4-31b-it"
+NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+MODEL_ID = "moonshotai/kimi-k3"
 DEFAULT_REGION = "PK"
 
 DEFAULT_AGENCY_INFO = """Agency name: Orvexa Systems
@@ -178,7 +178,7 @@ def clean_pitch_text(text):
     return text.strip()
 
 
-def call_gemma(api_key, system_prompt, user_prompt, temperature):
+def call_kimi(api_key, system_prompt, user_prompt, temperature):
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
         "model": MODEL_ID,
@@ -189,7 +189,7 @@ def call_gemma(api_key, system_prompt, user_prompt, temperature):
         "temperature": temperature,
         "max_tokens": 220,
     }
-    resp = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=45)
+    resp = requests.post(NVIDIA_URL, headers=headers, json=payload, timeout=45)
     resp.raise_for_status()
     data = resp.json()
     return clean_pitch_text(data["choices"][0]["message"]["content"])
@@ -206,14 +206,14 @@ def regenerate_pitch_callback(lead_id, ix):
     key = f"pitch_text_{lead_id}"
     api_key_val = st.session_state.get("api_key_input", "")
     if not api_key_val:
-        st.session_state[f"error_{lead_id}"] = "Add your OpenRouter API key in the sidebar first."
+        st.session_state[f"error_{lead_id}"] = "Add your NVIDIA API key in the sidebar first."
         return
     try:
         cdf = st.session_state.clean_df
         lead_row = cdf.loc[ix]
         user_prompt = build_prompt(lead_row)
         system_prompt = f"{st.session_state.get('style_guide_input', DEFAULT_STYLE_GUIDE)}\n\n{st.session_state.get('agency_info_input', DEFAULT_AGENCY_INFO)}"
-        new_pitch = call_gemma(api_key_val, system_prompt, user_prompt, st.session_state.get("temperature_slider", 0.9))
+        new_pitch = call_kimi(api_key_val, system_prompt, user_prompt, st.session_state.get("temperature_slider", 0.9))
         cdf.loc[ix, "pitch"] = new_pitch
         st.session_state.clean_df = cdf
         st.session_state[key] = new_pitch
@@ -249,14 +249,14 @@ with st.sidebar:
     st.header("Settings")
 
     api_key = st.text_input(
-        "OpenRouter API key",
-        value=_get_secret("OPENROUTER_API_KEY"),
+        "NVIDIA API key",
+        value=_get_secret("NVIDIA_API_KEY"),
         type="password",
-        help="Get one at openrouter.ai. Stored only for this session.",
+        help="Get one from NVIDIA NIM. Stored only for this session.",
         key="api_key_input",
     )
 
-    st.caption(f"Model: `{MODEL_ID}` via OpenRouter")
+    st.caption(f"Model: `{MODEL_ID}` via NVIDIA NIM")
 
     temperature = st.slider("Pitch creativity", 0.3, 1.2, 0.9, 0.1, key="temperature_slider")
 
@@ -431,7 +431,7 @@ if st.session_state.clean_df is not None:
         # ---- Step 4: generate pitches ----
         if st.button(f"Generate pitches for {len(selected)} selected leads", type="primary", disabled=len(selected) == 0):
             if not api_key:
-                st.error("Add your OpenRouter API key in the sidebar first.")
+                st.error("Add your NVIDIA API key in the sidebar first.")
             else:
                 progress = st.progress(0.0, text="Starting...")
                 idxs = selected.index.tolist()
@@ -440,7 +440,7 @@ if st.session_state.clean_df is not None:
                     progress.progress((i) / len(idxs), text=f"Writing pitch for {lead['name']}...")
                     try:
                         user_prompt = build_prompt(lead)
-                        pitch = call_gemma(api_key, f"{style_guide}\n\n{agency_info}", user_prompt, temperature)
+                        pitch = call_kimi(api_key, f"{style_guide}\n\n{agency_info}", user_prompt, temperature)
                     except Exception as e:
                         pitch = f"[Error generating pitch: {e}]"
                     clean_df.loc[ix, "pitch"] = pitch
