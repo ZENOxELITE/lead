@@ -32,7 +32,7 @@ except ImportError:
 # Config / defaults
 # --------------------------------------------------------------------------
 
-st.set_page_config(page_title="Orvexa Lead Pitcher", page_icon="📋", layout="wide")
+st.set_page_config(page_title="Orvexa Lead Pitcher", layout="wide")
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_ID = "google/gemma-4-31b-it"
@@ -290,7 +290,7 @@ for key, default in [
 # Main flow
 # --------------------------------------------------------------------------
 
-st.title("📋 Orvexa Lead Pitcher")
+st.title("Orvexa Lead Pitcher")
 st.caption("Upload leads → clean the list → generate a pitch per lead → open it in WhatsApp and send it yourself.")
 
 # ---- Step 1: upload ----
@@ -361,7 +361,7 @@ if st.session_state.clean_df is not None:
     m4.metric("Duplicates removed", int((issues_df["issue"].isin(["duplicate phone", "duplicate name"])).sum()) if len(issues_df) else 0)
 
     if len(issues_df):
-        with st.expander(f"⚠️ {len(issues_df)} leads need attention", expanded=False):
+        with st.expander(f"{len(issues_df)} leads need attention", expanded=False):
             st.caption("Fix a number or name below, then re-check it. Rows that still fail stay here.")
             edited_issues = st.data_editor(
                 issues_df[["name", "phone_raw", "issue", "industry", "notes"]],
@@ -429,7 +429,7 @@ if st.session_state.clean_df is not None:
         st.caption(f"{len(selected)} lead(s) selected for pitch generation.")
 
         # ---- Step 4: generate pitches ----
-        if st.button(f"✨ Generate pitches for {len(selected)} selected leads", type="primary", disabled=len(selected) == 0):
+        if st.button(f"Generate pitches for {len(selected)} selected leads", type="primary", disabled=len(selected) == 0):
             if not api_key:
                 st.error("Add your OpenRouter API key in the sidebar first.")
             else:
@@ -473,7 +473,7 @@ if st.session_state.clean_df is not None:
                     b1, b2, b3 = st.columns([1, 1, 2])
                     with b1:
                         st.button(
-                            "↻ Regenerate",
+                            "Regenerate",
                             key=f"regen_{lead['lead_id']}",
                             on_click=regenerate_pitch_callback,
                             args=(lead["lead_id"], ix),
@@ -483,7 +483,7 @@ if st.session_state.clean_df is not None:
                         st.error(err)
                     with b2:
                         if lead["clean_phone"]:
-                            st.link_button("💬 Open in WhatsApp", wa_link(lead["clean_phone"], edited_pitch))
+                            st.link_button("Open in WhatsApp", wa_link(lead["clean_phone"], edited_pitch))
                     with b3:
                         sent = st.checkbox("Mark as sent", value=(lead["status"] == "sent"), key=f"sent_{lead['lead_id']}")
                         clean_df.loc[ix, "status"] = "sent" if sent else "not sent"
@@ -492,7 +492,7 @@ if st.session_state.clean_df is not None:
 
             st.divider()
             st.download_button(
-                "⬇️ Download full results (xlsx)",
+                "Download full results (xlsx)",
                 data=_to_xlsx_bytes(clean_df.drop(columns=["lead_id", "include"])),
                 file_name="orvexa_leads_pitched.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
